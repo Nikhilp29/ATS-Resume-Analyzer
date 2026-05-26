@@ -56,10 +56,7 @@ Advanced-ATS/
 
 ---
 
-## 💻 How to Run Locally
 
-git clone https://github.com/rawooldipesh/ATS-RESUME-ANALYZER.git
-cd ATS-RESUME-ANALYZER
 
 # Create virtual env (optional but recommended)
 python -m venv venv
@@ -111,8 +108,6 @@ Integrated with Gemini-2.0-Flash (Google Generative AI) to provide personalized 
 📜 License
 MIT License
 
-🤝 Connect With Me
-📧 rawooldipesh0@gmail.com
-🔗 https://www.linkedin.com/in/dipesh-rawool
+
 
 

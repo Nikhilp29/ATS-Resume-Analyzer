@@ -11,7 +11,8 @@ from utils import preprocess_text
 from extract_keywords import extract_keywords  
 import nltk
 from datetime import timedelta  # ✅ Import this at the top if not already
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # Download punkt if not already present
 try:
@@ -42,8 +43,12 @@ job_role_model = joblib.load('job_role_model.pkl')
 tfidf_vectorizer = joblib.load('tfidf_vectorizer.pkl')
 
 # ✅ Configure Google AI API
-genai.configure(api_key="AIzaSyDE8rA0fq6MtlBWHoRnbRnoAwsGMKEwljA") 
-model = genai.GenerativeModel("gemini-2.0-flash")
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))  # Ensure google_api_key is defined in your .env and loaded properly
+model = genai.GenerativeModel("gemini-2.5-pro")
+
+# Just ADD Groq below it
+from groq import Groq
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # User Model
 class User(db.Model, UserMixin):
@@ -231,8 +236,49 @@ def predict():
         resume_suggestions=resume_suggestions
     )
 
+# ✅ Correct - everything indented inside the function
+@app.route('/generate_suggestions', methods=['GET'])
+@login_required
+def generate_suggestions():
+    latest_analysis = ResumeAnalysis.query.filter_by(user_id=current_user.id)\
+        .order_by(ResumeAnalysis.id.desc()).first()
 
+    if not latest_analysis:
+        return jsonify({"suggestions": "No suggestions found. Please re-upload your resume."})
 
+    resume_text = f"""
+    Name: {latest_analysis.name}
+    Skills: {latest_analysis.skills}
+    Education: {latest_analysis.education}
+    Job Roles: {latest_analysis.job_roles}
+    ATS Score: {latest_analysis.ats_score}
+    """
+
+    ai_prompt = f"""
+    Based on these resume details, give bullet-point suggestions to improve it.
+    Focus on formatting, skills gaps, and missing details.
+    ---
+    {resume_text}
+    ---
+    """
+
+    try:                          # ✅ try is inside the function
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": ai_prompt}],
+            max_tokens=1000
+        )
+        import re
+        suggestions = response.choices[0].message.content
+        suggestions = re.sub(r"\*{1,2}(.*?)\*{1,2}", r"\1", suggestions)
+        suggestions = re.sub(r"\*", "", suggestions).strip()
+        return jsonify({"suggestions": suggestions})   # ✅ inside try, inside function
+
+    except Exception as e:        # ✅ except is inside the function
+        print("Groq Error:", e)
+        return jsonify({"suggestions": f"Error: {str(e)}"})
+
+'''
 @app.route('/generate_suggestions', methods=['GET'])
 @login_required
 def generate_suggestions():
@@ -272,7 +318,7 @@ def generate_suggestions():
         print("AI Suggestion Error:", e)
         resume_suggestions = "Unable to generate suggestions at the moment."
 
-    return jsonify({"suggestions": resume_suggestions})
+    return jsonify({"suggestions": resume_suggestions})'''
 
 # Extract Text from PDF
 def extract_text_from_pdf(pdf_path):
@@ -293,7 +339,7 @@ def extract_text_from_pdf(pdf_path):
 from serpapi import GoogleSearch
 
 # 🔑 Your SerpApi key
-SERP_API_KEY = "8e8ff9e8eae04c7ad39f26ae2b4645aef9fa4bbd74e44037b711a23eaf5efa69"
+SERP_API_KEY = os.getenv("SERP_API_KEY")
 
 @app.route("/search_jobs", methods=["GET"])
 def search_jobs():
