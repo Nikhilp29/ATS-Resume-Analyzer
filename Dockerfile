@@ -12,9 +12,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Pre-download NLTK data at BUILD time, not first request
-RUN python -m nltk.downloader punkt stopwords wordnet -d /usr/local/nltk_data
+RUN python -m nltk.downloader punkt punkt_tab stopwords wordnet -d /usr/local/nltk_data
 ENV NLTK_DATA=/usr/local/nltk_data
-
 # Copy the rest of your app
 COPY . .
 
