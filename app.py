@@ -23,8 +23,7 @@ except LookupError:
 # Initialize Flask App
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SECRET_KEY'] = 'your_secret_key'
-
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-fallback-key")
 # ✅ Set session timeout to 30 minutes
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
@@ -386,9 +385,22 @@ def search_jobs():
 
 
 
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 7860))
+#     app.run(host='0.0.0.0', port=port) 
+#     with app.app_context():
+#         db.create_all()  # Create tables if they don't exist
+#     app.run(debug=True)
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
     with app.app_context():
-        db.create_all()  # Create tables if they don't exist
-    app.run(debug=True)
+        db.create_all()  # Create tables before starting server
+
+    port = int(os.environ.get('PORT', 7860))
+    app.run(host='0.0.0.0', port=port)
+
+
+
+
+
+
