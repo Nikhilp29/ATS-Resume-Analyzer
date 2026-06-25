@@ -23,8 +23,7 @@ except LookupError:
 # Initialize Flask App
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SECRET_KEY'] = 'your_secret_key'
-
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-fallback-key")
 # ✅ Set session timeout to 30 minutes
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
